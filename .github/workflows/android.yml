@@ -27,15 +27,17 @@ jobs:
 
       - name: Set up Android SDK
         run: |
-          mkdir -p ~/android-sdk
-          cd ~/android-sdk
+          mkdir -p ~/android-sdk/cmdline-tools/latest
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip commandlinetools-linux-9477386_latest.zip -d cmdline-tools
-          mv cmdline-tools/cmdline-tools cmdline-tools/latest
+          unzip commandlinetools-linux-9477386_latest.zip -d ~/android-sdk/cmdline-tools/latest
+          mv ~/android-sdk/cmdline-tools/latest/cmdline-tools/* ~/android-sdk/cmdline-tools/latest/
           export ANDROID_HOME=~/android-sdk
           export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+
+      - name: Set execute permission on gradlew
+        run: chmod +x gradlew
 
       - name: Build APK
         run: ./gradlew assembleRelease
