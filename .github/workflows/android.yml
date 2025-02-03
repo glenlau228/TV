@@ -1,31 +1,41 @@
-name: TV Build
+name: Build APK
 
 on:
-#  push:
-#    branches:
-#      - main
-#  pull_request:
+  push:
+    branches:
+      - main  # 根据你的分支名称修改
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          fetch-depth: 0
-      - name: Build With Gradle
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
         run: |
-          chmod +x gradlew
-          ./gradlew assemblerelease --build-cache --parallel --daemon --warning-mode all
-      - name: Prepare App
-        run: |
-          mkdir -p ${{ github.workspace }}/apk/
-          for file in `find ~ -name "*.apk" -print`; do
-            mv "$file" ${{ github.workspace }}/apk/
-          done
-      - name: Upload App To Artifact
-        uses: actions/upload-artifact@v3
+          mkdir -p ~/android-sdk
+          cd ~/android-sdk
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip commandlinetools-linux-9477386_latest.zip
+          export ANDROID_HOME=~/android-sdk
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+
+      - name: Build APK
+        run: ./gradlew assembleRelease
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: com.github.tvbox.osc
-          path: ${{ github.workspace }}/apk/*
+          name: app-release
+          path: app/build/outputs/apk/release/
