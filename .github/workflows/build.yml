@@ -1,36 +1,26 @@
-name: Build APK
+name: Build & Publish Release APK
 
 on:
   push:
-    branches:
-      - main  # 根据你的分支名称修改
-  workflow_dispatch:
+    tags:
+      - '*'
 
 jobs:
-  build:
+  Gradle:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'  # 使用 Java 17
-          distribution: 'temurin'
-
-      - name: Set up Android SDK
-        uses: actions/android-setup@v1
-        with:
-          api-level: 33
-          build-tools: 33.0.0
-
-      - name: Build APK
-        run: ./gradlew assembleRelease
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: app/build/outputs/apk/release/
+    - name: checkout code
+      uses: actions/checkout@v2
+    - name: setup jdk
+      uses: actions/setup-java@v1
+      with:
+        java-version: 11
+    - name: Make Gradle executable
+      run: chmod +x ./gradlew
+    - name: Build Release APK
+      run: ./gradlew assembleRelease
+    - name: Releasing using Hub
+      uses: sangatdesai/release-apk@main
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        APP_FOLDER: app
